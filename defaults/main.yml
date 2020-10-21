@@ -178,8 +178,10 @@ backup_location_options:
     # set.
     #exclude_if_present: .nobackup
 
-  hook_before_backup: []
+backup_consistency_options:
 
-  hook_after_backup: []
+hook_before_backup: []
 
-  hook_on_error: []
+hook_after_backup: []
+
+hook_on_error: []
