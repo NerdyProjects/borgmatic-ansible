@@ -1,0 +1,13 @@
+#!/bin/bash
+
+TMP_FILE={{ textfile_collector_tmp_file }}
+DEST_FILE={{ textfile_collector_prom_file }}
+
+INFO=`borgmatic info --json`
+CSIZE=`echo $INFO | jq -r .'[0]'.cache.stats.unique_csize`
+LAST=`echo $INFO | jq -r .'[0]'.repository.last_modified`
+LAST_TIMESTAMP=`date -d $LAST +%s`
+
+echo "last_backup_time_seconds $LAST_TIMESTAMP" > $TMP_FILE
+echo "total_backup_remote_size $CSIZE" >> $TMP_FILE
+mv $TMP_FILE $DEST_FILE

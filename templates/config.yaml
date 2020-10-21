@@ -1,0 +1,71 @@
+# {{ ansible_managed }}
+
+# Where to look for files to backup, and where to store those backups. See
+# https://borgbackup.readthedocs.io/en/stable/quickstart.html and
+# https://borgbackup.readthedocs.io/en/stable/usage.html#borg-create for details.
+location:
+    # List of source directories to backup (required). Globs and tildes are expanded.
+    source_directories:
+        - {{ db_folder }}
+{% for folder in backup_folders|default([]) %}
+        - "{{ folder }}"
+{% endfor %}
+
+    # Paths to local or remote repositories (required). Tildes are expanded. Multiple
+    # repositories are backed up to in sequence. See ssh_command for SSH options like
+    # identity file or port.
+    repositories:
+        - "{{ borg_repository }}"
+
+{% if backup_location_options %}
+    {{ backup_location_options | to_nice_yaml(indent=4) | indent(width=4) }}
+{% endif %}
+
+{% if backup_storage_options %}
+storage:
+    {{ backup_storage_options | to_nice_yaml(indent=4) | indent(width=4) }}
+{% endif %}
+
+{% if backup_retention_options %}
+retention:
+    {{ backup_retention_options | to_nice_yaml(indent=4) | indent(width=4) }}
+{% endif %}
+
+{% if backup_consistency_options %}
+consistency:
+    {{ backup_consistency_options | to_nice_yaml(indent=4) | indent(width=4) }}
+{% endif %}
+
+# Shell commands or scripts to execute before and after a backup or if an error has occurred.
+# IMPORTANT: All provided commands and scripts are executed with user permissions of borgmatic.
+# Do not forget to set secure permissions on this file as well as on any script listed (chmod 0700) to
+# prevent potential shell injection or privilege escalation.
+hooks:
+    # List of one or more shell commands or scripts to execute before creating a backup.
+    before_backup:
+{% for db in backup_mysql_databases|default([]) %}
+        - /usr/bin/mysqldump --skip-comments {{ db }} > /root/backups/mysql_{{ db }}.sql
+{% endfor %}
+{% for db in backup_postgres_databases|default([]) %}
+        - sudo -u postgres /usr/bin/pg_dump {{ db }} > /root/backups/postgres_{{ db }}.sql
+{% endfor %}
+{% if hook_before_backup %}
+    {{ hook_before_backup | to_nice_yaml(indent=8) | indent(width=4) }}
+{% endif %}
+
+    # List of one or more shell commands or scripts to execute after creating a backup.
+{% if use_textfile_collector of hook_after_backup %}
+    after_backup:
+{% if use_textfile_collector %}
+        - /usr/local/bin/borgmatic_exporter
+{% endif %}
+{% if hook_after_backup %}
+    {{ hook_after_backup | to_nice_yaml(indent=8) | indent(width=4) }}
+{% endif %}
+{% endif %}
+
+    # List of one or more shell commands or scripts to execute in case an exception has occurred.
+{% if hook_on_error %}
+    on_error:
+    {{ hook_on_error | to_nice_yaml(indent=8) | indent(width=4) }}
+{% endif %}

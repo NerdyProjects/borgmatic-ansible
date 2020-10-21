@@ -1,0 +1,185 @@
+---
+# defaults file for borgmatic-ansible
+# backup destination, e.g. ssh://user@yourserver:port/path
+borg_repository: ~
+
+# encryption passphrase. Should be set in a vault.
+borg_encryption_passphrase: ~
+
+# array of paths on the system that should be backed up
+backup_folders: []
+
+# folder where database dumps are written to
+db_folder: /root/backups
+
+# list of mysql databases to be dumped and included in the backup
+backup_mysql_databases: []
+
+# list of postgres databases to be dumped and included in the backup
+backup_postgres_databases: []
+
+use_textfile_collector: true
+textfile_collector_tmp_file: /var/lib/node_exporter/textfile_collector/backup.prom.tmp
+textfile_collector_prom_file: /var/lib/node_exporter/textfile_collector/backup.prom
+
+backup_retention_options:
+    # Keep all archives within this time interval.
+    #keep_within: 3H
+
+    # Number of secondly archives to keep.
+    #keep_secondly: 60
+
+    # Number of minutely archives to keep.
+    #keep_minutely: 60
+
+    # Number of hourly archives to keep.
+    #keep_hourly: 24
+
+    # Number of daily archives to keep.
+    keep_daily: 14
+
+    # Number of weekly archives to keep.
+    keep_weekly: 4
+
+    # Number of monthly archives to keep.
+    keep_monthly: 6
+
+    # Number of yearly archives to keep.
+    keep_yearly: 1
+
+# Repository storage options. See
+# https://borgbackup.readthedocs.io/en/stable/usage.html#borg-create and
+# https://borgbackup.readthedocs.io/en/stable/usage/general.html#environment-variables for
+# details.
+backup_storage_options:
+    # The standard output of this command is used to unlock the encryption key. Only
+    # use on repositories that were initialized with passcommand/repokey encryption.
+    # Note that if both encryption_passcommand and encryption_passphrase are set,
+    # then encryption_passphrase takes precedence. Defaults to not set.
+    #encryption_passcommand: secret-tool lookup borg-repository repo-name
+
+    # Passphrase to unlock the encryption key with. Only use on repositories that were
+    # initialized with passphrase/repokey encryption. Quote the value if it contains
+    # punctuation, so it parses correctly. And backslash any quote or backslash
+    # literals as well. Defaults to not set.
+    encryption_passphrase: "{{ borg_encryption_passphrase }}"
+
+    # Number of seconds between each checkpoint during a long-running backup. See
+    # https://borgbackup.readthedocs.io/en/stable/faq.html#if-a-backup-stops-mid-way-does-the-already-backed-up-data-stay-there
+    # for details. Defaults to checkpoints every 1800 seconds (30 minutes).
+    #checkpoint_interval: 1800
+
+    # Specify the parameters passed to then chunker (CHUNK_MIN_EXP, CHUNK_MAX_EXP,
+    # HASH_MASK_BITS, HASH_WINDOW_SIZE). See https://borgbackup.readthedocs.io/en/stable/internals.html
+    # for details. Defaults to "19,23,21,4095".
+    #chunker_params: 19,23,21,4095
+
+    # Type of compression to use when creating archives. See
+    # https://borgbackup.readthedocs.org/en/stable/usage.html#borg-create for details.
+    # Defaults to no compression.
+    compression: lz4
+
+    # Remote network upload rate limit in kiBytes/second. Defaults to unlimited.
+    #remote_rate_limit: 100
+
+    # Command to use instead of "ssh". This can be used to specify ssh options.
+    # Defaults to not set.
+    #ssh_command: ssh -i /path/to/private/key
+
+    # Base path used for various Borg directories. Defaults to $HOME, ~$USER, or ~.
+    # See https://borgbackup.readthedocs.io/en/stable/usage/general.html#environment-variables for details.
+    #borg_base_directory: /path/to/base
+
+    # Path for Borg configuration files. Defaults to $borg_base_directory/.config/borg
+    #borg_config_directory: /path/to/base/config
+
+    # Path for Borg cache files. Defaults to $borg_base_directory/.cache/borg
+    #borg_cache_directory: /path/to/base/cache
+
+    # Path for Borg security and encryption nonce files. Defaults to $borg_base_directory/.config/borg/security
+    #borg_security_directory: /path/to/base/config/security
+
+    # Path for Borg encryption key files. Defaults to $borg_base_directory/.config/borg/keys
+    #borg_keys_directory: /path/to/base/config/keys
+
+    # Umask to be used for borg create. Defaults to 0077.
+    #umask: 0077
+
+    # Maximum seconds to wait for acquiring a repository/cache lock. Defaults to 1.
+    #lock_wait: 5
+
+    # Name of the archive. Borg placeholders can be used. See the output of
+    # "borg help placeholders" for details. Defaults to
+    # "{hostname}-{now:%Y-%m-%dT%H:%M:%S.%f}". If you specify this option, you must
+    # also specify a prefix in the retention section to avoid accidental pruning of
+    # archives with a different archive name format. And you should also specify a
+    # prefix in the consistency section as well.
+    #archive_name_format: '{hostname}-documents-{now}'
+
+backup_location_options:
+    # Stay in same file system (do not cross mount points). Defaults to false.
+    #one_file_system: true
+
+    # Only store/extract numeric user and group identifiers. Defaults to false.
+    #numeric_owner: true
+
+    # Use Borg's --read-special flag to allow backup of block and other special
+    # devices. Use with caution, as it will lead to problems if used when
+    # backing up special devices such as /dev/zero. Defaults to false.
+    #read_special: false
+
+    # Record bsdflags (e.g. NODUMP, IMMUTABLE) in archive. Defaults to true.
+    #bsd_flags: true
+
+    # Mode in which to operate the files cache. See
+    # https://borgbackup.readthedocs.io/en/stable/usage/create.html#description for
+    # details. Defaults to "ctime,size,inode".
+    #files_cache: ctime,size,inode
+
+    # Alternate Borg local executable. Defaults to "borg".
+    #local_path: borg1
+
+    # Alternate Borg remote executable. Defaults to "borg".
+    #remote_path: borg1
+
+    # Any paths matching these patterns are included/excluded from backups. Globs are
+    # expanded. (Tildes are not.) Note that Borg considers this option experimental.
+    # See the output of "borg help patterns" for more details. Quote any value if it
+    # contains leading punctuation, so it parses correctly.
+    #patterns:
+    #    - R /
+    #    - '- /home/*/.cache'
+    #    - + /home/susan
+    #    - '- /home/*'
+
+    # Read include/exclude patterns from one or more separate named files, one pattern
+    # per line. Note that Borg considers this option experimental. See the output of
+    # "borg help patterns" for more details.
+    #patterns_from:
+    #    - /etc/borgmatic/patterns
+
+    # Any paths matching these patterns are excluded from backups. Globs and tildes
+    # are expanded. See the output of "borg help patterns" for more details.
+    #exclude_patterns:
+    #    - '*.pyc'
+    #    - ~/*/.cache
+    #    - /etc/ssl
+
+    # Read exclude patterns from one or more separate named files, one pattern per
+    # line. See the output of "borg help patterns" for more details.
+    #exclude_from:
+    #    - /etc/borgmatic/excludes
+
+    # Exclude directories that contain a CACHEDIR.TAG file. See
+    # http://www.brynosaurus.com/cachedir/spec.html for details. Defaults to false.
+    #exclude_caches: true
+
+    # Exclude directories that contain a file with the given filename. Defaults to not
+    # set.
+    #exclude_if_present: .nobackup
+
+  hook_before_backup: []
+
+  hook_after_backup: []
+
+  hook_on_error: []
