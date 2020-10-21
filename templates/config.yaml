@@ -54,7 +54,7 @@ hooks:
 {% endif %}
 
     # List of one or more shell commands or scripts to execute after creating a backup.
-{% if use_textfile_collector of hook_after_backup %}
+{% if use_textfile_collector or hook_after_backup %}
     after_backup:
 {% if use_textfile_collector %}
         - /usr/local/bin/borgmatic_exporter
