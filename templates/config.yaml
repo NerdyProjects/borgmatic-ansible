@@ -44,7 +44,7 @@ hooks:
     # List of one or more shell commands or scripts to execute before creating a backup.
     before_backup:
 {% for db in backup_mysql_databases|default([]) %}
-        - /usr/bin/mysqldump --skip-comments {{ db }} > /root/backups/mysql_{{ db }}.sql
+        - /usr/bin/mysqldump --skip-comments --single-transaction --quick {{ db }} > /root/backups/mysql_{{ db }}.sql
 {% endfor %}
 {% for db in backup_postgres_databases|default([]) %}
         - sudo -u postgres /usr/bin/pg_dump {{ db }} > /root/backups/postgres_{{ db }}.sql
